@@ -6,7 +6,7 @@ import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import cookieParser from "cookie-parser";
 import userAuth from "./Middleware/authMiddleware";
-
+import{PORT} from "./config"
 
 const app=express();
 app.use(json());
@@ -113,5 +113,5 @@ app.delete("/content",userAuth,async(req,res)=>{
 
 ConnectDB().then(()=>{
     console.log("Database connection is Established!!")
-    app.listen(3000,()=>{console.log("server is listen on port 3000")})
+    app.listen(PORT,()=>{console.log("server is listen on port 3000")})
 })
