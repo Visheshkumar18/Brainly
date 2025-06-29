@@ -2,11 +2,14 @@ import express, { json, Request, Response } from "express";
 import { User } from "./models/userSchema";
 import   {Content}  from "./models/contentSchema";
 import ConnectDB from "./config/database";
-import bcrypt from "bcrypt"
+import bcrypt, { hash } from "bcrypt"
 import jwt from "jsonwebtoken"
 import cookieParser from "cookie-parser";
 import userAuth from "./Middleware/authMiddleware";
 import{PORT} from "./config"
+import { Links } from "./models/LinkSchema";
+import { random } from "./utils/Utils";
+import { validateLocaleAndSetLanguage } from "typescript";
 
 const app=express();
 app.use(json());
@@ -102,7 +105,43 @@ app.delete("/content",userAuth,async(req,res)=>{
     })
     res.json({message:"Deleted"});
 })
-
+app.post("/share",userAuth,async (req,res)=>{
+    const {share}=req.body;
+    console.log(share )
+    if(share){
+        const Linkhash=random(10)
+        await Links.create({
+           userId:req.user._id,
+           hash:Linkhash, 
+        })
+        res.json({message:"updated sharable link"+ Linkhash});
+    }
+    else{
+        console.log(req.user._id);
+        await Links.deleteOne({userId:req.user._id});
+        res.json({message:"Removed Link"});
+    }
+    
+})
+app.get("/brain/:shareLink",userAuth,async(req, res)=>{
+    const link=req.params.shareLink;
+  const isValidLink=  await Links.findOne({hash:link});
+  console.log(isValidLink)
+    if(!isValidLink){
+        res.status(411).json({message:"Invalid input type"});
+    }
+    else{
+       const user = await User.findOne({_id:isValidLink.userId}); 
+       if(!user){
+        res.json({message:"User is not exist"});
+       }
+       const userContent=await Content.find({userId:isValidLink.userId});
+       console.log(userContent);
+       res.json({username:user?.userName,
+        content:userContent
+       })
+    }
+})
 
 
 

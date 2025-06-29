@@ -15,7 +15,7 @@ const userAuth = async (req: Request, res: Response, next: NextFunction): Promis
     const { id } = decodedObj;
 
     const LoggedIN = await User.findById(id);
-
+ 
     if (!LoggedIN) {
       throw new Error("User not found");
     }
