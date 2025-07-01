@@ -9,11 +9,15 @@ import userAuth from "./Middleware/authMiddleware";
 import{PORT} from "./config"
 import { Links } from "./models/LinkSchema";
 import { random } from "./utils/Utils";
-import { validateLocaleAndSetLanguage } from "typescript";
+import cors from 'cors';
 
 const app=express();
 app.use(json());
 app.use(cookieParser());
+app.use(cors({
+  origin: "http://localhost:5173", 
+  credentials: true               
+}));
 
 app.post("/signup",async (req:Request,res:Response):Promise<void>=>{
     try{
@@ -74,10 +78,12 @@ app.post("/content",userAuth,async (req:Request,res:Response):Promise<void>=>{
 
     const link=req.body.link;
     const type=req.body.type;
+    const title=req.body.title
     await Content.create({
         link:link,
         type:type,
         tags:[],
+        title:title,
         userId:req.user.id
     })
     res.json({message:"Content is Saved "})
@@ -114,7 +120,7 @@ app.post("/share",userAuth,async (req,res)=>{
            userId:req.user._id,
            hash:Linkhash, 
         })
-        res.json({message:"updated sharable link"+ Linkhash});
+        res.json({message:"updated sharable link :" + Linkhash});
     }
     else{
         console.log(req.user._id);

@@ -1,18 +1,24 @@
 import mongoose, { Schema,Document, Types } from "mongoose";
 
 export interface Usercontent extends Document{
-    title:String,
-    link:String,
+    title:string,
+    link:string,
     tags:[],
+    type:string,
     userId:mongoose.Types.ObjectId
 }
 
 const contentSchema= new Schema<Usercontent>({
     title:{
         type:String,
+        required:true,
+        trim:true
+    
     },
         link:{
-            type:String
+            type:String,
+            required:true,
+            trim:true
         },
         tags:{
             type:[{type:mongoose.Types.ObjectId, ref:'Tag'}]
@@ -21,6 +27,9 @@ const contentSchema= new Schema<Usercontent>({
          type: mongoose.Schema.Types.ObjectId,
          ref: "User", 
     
+  },
+  type:{
+    type:String
   }
     
 })
