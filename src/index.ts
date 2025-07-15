@@ -33,7 +33,7 @@ app.post("/signup",async (req:Request,res:Response):Promise<void>=>{
             password:hashPassword
         })
         user.save();
-        res.json({message:"User Signup successfully!"});
+        res.status(200).json({message:"User Signup successfully!"});
 
 
     }
@@ -41,7 +41,6 @@ app.post("/signup",async (req:Request,res:Response):Promise<void>=>{
         res.status(403).json({message:err});
     }
 })
-
 app.post("/signin",async (req:Request,res:Response):Promise<void>=>{
     try{
         const{userName,password}=req.body;
@@ -102,8 +101,8 @@ app.get("/content",userAuth,async(req,res):Promise<void>=>{
   }
 
 })
-app.delete("/content",userAuth,async(req,res)=>{
-    const contentID=req.body.contentID;
+app.delete("/delete/:id",userAuth,async(req,res)=>{
+    const contentID=req.params.id;
     const userID=req.user._id;
     await Content.deleteOne({
         _id:contentID,
@@ -111,28 +110,26 @@ app.delete("/content",userAuth,async(req,res)=>{
     })
     res.json({message:"Deleted"});
 })
-app.post("/share",userAuth,async (req,res)=>{
-    const {share}=req.body;
-    console.log(share )
-    if(share){
-        const Linkhash=random(10)
-        await Links.create({
-           userId:req.user._id,
-           hash:Linkhash, 
-        })
-        res.json({message:"updated sharable link :" + Linkhash});
-    }
-    else{
-        console.log(req.user._id);
-        await Links.deleteOne({userId:req.user._id});
-        res.json({message:"Removed Link"});
-    }
-    
-})
+app.post("/share", userAuth, async (req, res) => {
+  const { share } = req.body;
+
+    if (share) {
+    const Linkhash = random(10);
+    await Links.updateOne(
+      { userId: req.user._id },
+      { $set: { hash: Linkhash } },
+      { upsert: true }
+    );
+    res.json( Linkhash );
+  } else {
+    await Links.deleteOne({ userId: req.user._id });
+    res.json({ message: "Removed link" });
+  }
+});
+
 app.get("/brain/:shareLink",userAuth,async(req, res)=>{
     const link=req.params.shareLink;
   const isValidLink=  await Links.findOne({hash:link});
-  console.log(isValidLink)
     if(!isValidLink){
         res.status(411).json({message:"Invalid input type"});
     }
@@ -142,7 +139,6 @@ app.get("/brain/:shareLink",userAuth,async(req, res)=>{
         res.json({message:"User is not exist"});
        }
        const userContent=await Content.find({userId:isValidLink.userId});
-       console.log(userContent);
        res.json({username:user?.userName,
         content:userContent
        })
